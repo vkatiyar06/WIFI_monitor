@@ -15,19 +15,23 @@ import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
-    TextView view;
+    TextView connectivity, state, device;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        view = findViewById(R.id.view);
-        view.setMovementMethod(new ScrollingMovementMethod());
+        connectivity = findViewById(R.id.view1);
+        state = findViewById(R.id.view2);
+        device = findViewById(R.id.view3);
+        //connectivity.setMovementMethod(new ScrollingMovementMethod());
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
         intentFilter.addAction("android.net.wifi.STATE_CHANGE");
         intentFilter.addAction("android.net.wifi.p2p.THIS_DEVICE_CHANGED");
         this.registerReceiver(MyBroadcastReceiver, intentFilter);
     }
+
     private BroadcastReceiver MyBroadcastReceiver = new BroadcastReceiver() {
 
         @Override
@@ -36,11 +40,13 @@ public class MainActivity extends AppCompatActivity {
             Task asyncTask = new Task(pendingResult, intent);
             asyncTask.execute();
         }
-        class Task extends AsyncTask<Void,Void,String> {
+
+        class Task extends AsyncTask<Void, Void, String> {
 
 
             private final BroadcastReceiver.PendingResult pendingResult;
             private final Intent intent;
+            TextView view;
 
             private Task(BroadcastReceiver.PendingResult pendingResult, Intent intent) {
                 this.pendingResult = pendingResult;
@@ -56,21 +62,27 @@ public class MainActivity extends AppCompatActivity {
                 sb.append("Action: " + action + "\n");
                 sb.append("Details: " + extrasString + "\n");
                 String log = sb.toString();
+                if (action.equals("android.net.conn.CONNECTIVITY_CHANGE"))
+                    view = connectivity;
+                else if (action.equals("android.net.wifi.STATE_CHANGE"))
+                    view = state;
+                else if (action.equals("android.net.wifi.p2p.THIS_DEVICE_CHANGED"))
+                    view = device;
                 return log;
             }
-
 
 
             @Override
             protected void onPostExecute(String s) {
                 super.onPostExecute(s);
-                view.append(s+"\n\n");
+                    view.setText(s);
                 // Must call finish() so the BroadcastReceiver can be recycled.
                 pendingResult.finish();
             }
 
 
         }
+
         private String getExtrasString(Intent pIntent) {
             String extrasString = "";
             Bundle extras = pIntent.getExtras();
